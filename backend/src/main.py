@@ -1,13 +1,16 @@
 from typing import Union
+import os
 
 from fastapi import FastAPI
+
 
 app = FastAPI()
 
 
 @app.get("/")
 def read_root():
-    return {"Hello": "Docker"}
+    return {"env": os.getenv("BACKEND_PORT")}
+    #return {"Hello": "Docker"}
 
 
 @app.get("/items/{item_id}")
