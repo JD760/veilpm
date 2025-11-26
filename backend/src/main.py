@@ -1,16 +1,17 @@
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI
 from fastapi.concurrency import asynccontextmanager
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from .tables.user import DbUser
+
+from .dbutil import get_session, init_database
 from .routers import auth
 from .settings import Settings
-from .dbutil import get_session, init_database
+from .tables.user import DbUser
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.settings = Settings() # pyright: ignore
+    app.state.settings = Settings()  # pyright: ignore
     init_database(app.state.settings)
     yield
 

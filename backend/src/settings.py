@@ -1,5 +1,5 @@
-from pydantic import Field, SecretStr
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import SecretStr
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -11,6 +11,6 @@ class Settings(BaseSettings):
 
     jwt_secret_key: SecretStr
     jwt_algorithm: str
-    jwt_session_timeout: int = 60*24
-    
+    jwt_session_timeout: int = 60 * 24
+
     debug: bool
