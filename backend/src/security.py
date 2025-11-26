@@ -4,12 +4,8 @@ from functools import wraps
 from fastapi import HTTPException
 from jwt import api_jwt
 from pwdlib import PasswordHash
-from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 from src.settings import Settings
-
-from .tables.user import DbUser
 
 
 class TokenHandler:
@@ -34,11 +30,13 @@ class TokenHandler:
     def encode(self, user_name: str) -> str:
         token_payload = {
             "sub": user_name,
-            "exp": datetime.now() + timedelta(minutes=self.jwt_session_timeout),
+            "exp": datetime.now() + timedelta(minutes=self.jwt_session_timeout)
         }
 
         return api_jwt.encode(
-            token_payload, key=self.jwt_secret_key, algorithm=self.jwt_algorithm
+            token_payload,
+            key=self.jwt_secret_key,
+            algorithm=self.jwt_algorithm
         )
 
     def decode(self, token: str) -> str:
@@ -68,9 +66,3 @@ class PasswordHandler:
 
     def verify(self, password: str, password_hash: str):
         return self.password_hash.verify(password, password_hash)
-
-
-def query_db_for_user(session: Session, user_name: str) -> DbUser:
-    return session.execute(
-        select(DbUser).where(DbUser.name == user_name)
-    ).scalar_one_or_none()

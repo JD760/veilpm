@@ -5,9 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from src.dbutil import get_session
+from src.dbutil import get_session, query_db_for_user
 from src.models.auth import Token
-from src.security import PasswordHandler, TokenHandler, query_db_for_user
+from src.security import PasswordHandler, TokenHandler
 from src.settings import Settings
 from src.tables.user import DbUser
 
@@ -21,14 +21,15 @@ def get_settings(request: Request) -> Settings:
 
 @router.get("/auth")
 def auth_check(
-    token: str, settings: Settings = Depends(get_settings)
+    token: str = Depends(oauth2_scheme),
+    settings: Settings = Depends(get_settings)
 ) -> dict[str, bool]:
     handler = TokenHandler(settings)
     return {"valid_session": handler.verify_or_http_error(token)}
 
 
 @router.get("/users/me")
-def get_user():
+def get_user(token: str = Depends(oauth2_scheme)):
     pass
 
 
