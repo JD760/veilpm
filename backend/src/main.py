@@ -1,12 +1,9 @@
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from fastapi.concurrency import asynccontextmanager
-from sqlalchemy import select
-from sqlalchemy.orm import Session
 
-from .dbutil import get_session, init_database
-from .routers import auth
+from .dbutil import init_database
+from .routers import auth, user
 from .settings import Settings
-from .tables.user import DbUser
 
 
 @asynccontextmanager
@@ -18,6 +15,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)  # pyright: ignore
 app.include_router(auth.router)
+app.include_router(user.router)
 
 
 @app.get(
@@ -27,13 +25,3 @@ app.include_router(auth.router)
 )
 async def healthcheck():
     return {"status": "The service is up"}
-
-
-@app.get(
-    "/db",
-    summary="Database access check",
-    description="Test fetching something from the database",
-)
-async def db_check(session: Session = Depends(get_session)):
-    users = session.execute(select(DbUser)).scalars().all()
-    return {"users": users}

@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     postgres_user: str
     postgres_password: SecretStr
     database_host: str
+    database_port: int
     database_name: str
 
     jwt_secret_key: SecretStr

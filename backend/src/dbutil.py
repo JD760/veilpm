@@ -1,7 +1,5 @@
 from typing import Optional
-from urllib.parse import quote
-
-from sqlalchemy import Engine, create_engine, select
+from sqlalchemy import Engine, create_engine, select, URL
 from sqlalchemy.orm import sessionmaker, Session
 
 from src.tables.user import DbUser
@@ -29,16 +27,23 @@ def get_session():
 
 
 def get_connection_uri(settings: Settings):
-    uri = (
-        f"postgresql+psycopg://"
-        f":{quote(settings.postgres_password.get_secret_value())}"
-        f"@{settings.database_host}"
-        f"/{settings.database_name}"
+    return URL.create(
+        drivername="postgresql+psycopg",
+        username=settings.postgres_user,
+        password=settings.postgres_password.get_secret_value(),
+        host=settings.database_host,
+        port=settings.database_port,
+        database="veil"
     )
-    return uri
 
 
 def query_db_for_user(session: Session, user_name: str) -> DbUser:
     return session.execute(
         select(DbUser).where(DbUser.name == user_name)
     ).scalar_one_or_none()
+
+
+def insert_user(session: Session, user: DbUser):
+    session.add(user)
+    session.commit()
+    session.refresh(user)

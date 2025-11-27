@@ -1,13 +1,20 @@
 from datetime import datetime
-from uuid import UUID
 
 from pydantic import BaseModel
 
 
-class User(BaseModel):
-    id: UUID
+class BaseUser(BaseModel):
     name: str
     email: str
+
+
+class User(BaseUser):
     active: bool
     creation_date: datetime
-    last_login: datetime
+    last_login: datetime | None
+
+    model_config = {"from_attributes": True}
+
+
+class CreateUser(BaseUser):
+    password: str
