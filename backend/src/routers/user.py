@@ -3,9 +3,9 @@ from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from src.dbutil import get_session, insert_user, query_db_for_user
+from src.dbutil import get_session
 from src.dependency_util import get_settings
-from src.models.tables import DbUser
+from src.database.user import DbUser, get_user_by_name, insert_user
 from src.models.user import CreateUser, User
 from src.security import PasswordHandler, TokenHandler
 from src.settings import Settings
@@ -13,9 +13,16 @@ from src.settings import Settings
 from .auth import oauth2_scheme
 
 router = APIRouter(prefix="/users")
+USER_TAG = "User"
 
 
-@router.get("/me", response_model=User)
+@router.get(
+    "/me",
+    name="Get current user",
+    description="Get details of the user currently authenticated",
+    response_model=User,
+    tags=[USER_TAG],
+)
 def get_user(
     token: str = Depends(oauth2_scheme),
     session: Session = Depends(get_session),
@@ -24,11 +31,16 @@ def get_user(
     token_handler = TokenHandler(settings)
     token_payload = token_handler.decode_or_http_error(token)
     user_name = token_payload.get("sub", None)
-    user: DbUser = query_db_for_user(session, user_name)
+    user: DbUser = get_user_by_name(session, user_name)
     return User.model_validate(user)
 
 
-@router.post("/")
+@router.post(
+    "/",
+    name="Create a new user",
+    description="Create a new user, if permitted to do so",
+    tags=[USER_TAG],
+)
 def create_user(
     body: CreateUser,
     token: str = Depends(oauth2_scheme),

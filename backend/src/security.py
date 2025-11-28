@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from functools import wraps
+from uuid import UUID
 
 from fastapi import HTTPException
 from jwt import api_jwt
@@ -26,14 +27,17 @@ class TokenHandler:
 
         return wrapper
 
-    def encode(self, user_name: str) -> str:
+    def encode(self, user_id: UUID) -> str:
+        expiry = datetime.now() + timedelta(minutes=self.jwt_session_timeout)
         token_payload = {
-            "sub": user_name,
-            "exp": datetime.now() + timedelta(minutes=self.jwt_session_timeout),
+            "sub": str(user_id),
+            "exp": expiry,
         }
 
         return api_jwt.encode(
-            token_payload, key=self.jwt_secret_key, algorithm=self.jwt_algorithm
+            token_payload,
+            key=self.jwt_secret_key,
+            algorithm=self.jwt_algorithm,
         )
 
     def decode(self, token: str) -> str:

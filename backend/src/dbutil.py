@@ -1,8 +1,7 @@
 from typing import Optional
 
-from sqlalchemy import URL, Engine, create_engine, select
-from sqlalchemy.orm import Session, sessionmaker
-from src.tables.user import DbUser
+from sqlalchemy import URL, Engine, create_engine
+from sqlalchemy.orm import sessionmaker
 
 from .settings import Settings
 
@@ -35,15 +34,3 @@ def get_connection_uri(settings: Settings):
         port=settings.database_port,
         database="veil",
     )
-
-
-def query_db_for_user(session: Session, user_name: str) -> DbUser:
-    return session.execute(
-        select(DbUser).where(DbUser.name == user_name)
-    ).scalar_one_or_none()
-
-
-def insert_user(session: Session, user: DbUser):
-    session.add(user)
-    session.commit()
-    session.refresh(user)
