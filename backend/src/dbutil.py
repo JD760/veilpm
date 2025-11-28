@@ -1,7 +1,7 @@
 from typing import Optional
-from sqlalchemy import Engine, create_engine, select, URL
-from sqlalchemy.orm import sessionmaker, Session
 
+from sqlalchemy import URL, Engine, create_engine, select
+from sqlalchemy.orm import Session, sessionmaker
 from src.tables.user import DbUser
 
 from .settings import Settings
@@ -33,7 +33,7 @@ def get_connection_uri(settings: Settings):
         password=settings.postgres_password.get_secret_value(),
         host=settings.database_host,
         port=settings.database_port,
-        database="veil"
+        database="veil",
     )
 
 
