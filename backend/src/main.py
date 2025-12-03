@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.concurrency import asynccontextmanager
 
 from .dbutil import init_database
-from .routers import auth, user
+from .routers import auth, user, vault
 from .settings import Settings
 
 
@@ -16,6 +16,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)  # pyright: ignore
 app.include_router(auth.router)
 app.include_router(user.router)
+app.include_router(vault.router)
 
 
 @app.get(

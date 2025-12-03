@@ -17,7 +17,7 @@ AUTH_TAG = "Authentication"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login", scheme_name="JWT")
 
 
-@router.get("/", tags=[AUTH_TAG])
+@router.get("/status", tags=[AUTH_TAG])
 def auth_check(
     token: str = Depends(oauth2_scheme),
     settings: Settings = Depends(get_settings),
@@ -26,7 +26,7 @@ def auth_check(
     return {"valid_session": handler.verify_or_http_error(token)}
 
 
-@router.post("/login", response_model=Token, tags=[AUTH_TAG])
+@router.post("/token", response_model=Token, tags=[AUTH_TAG])
 def create_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     settings: Settings = Depends(get_settings),

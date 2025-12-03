@@ -7,7 +7,7 @@ from src.database.base import Base
 
 class DbUser(Base):
     __tablename__ = "user"
-    __table_args__ = {"schema": "users"}
+    __table_args__ = {"schema": "veil"}
     id: Mapped[UUID] = mapped_column(SQL_UUID, primary_key=True)
     name: Mapped[str] = mapped_column(Text)
     email: Mapped[str] = mapped_column(Text)

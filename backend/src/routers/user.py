@@ -1,6 +1,6 @@
 from datetime import datetime
 from http import HTTPStatus
-
+from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from src.dbutil import get_session
@@ -13,7 +13,7 @@ from src.settings import Settings
 from .auth import oauth2_scheme
 
 router = APIRouter(prefix="/users")
-USER_TAG = "User"
+USERS_TAG = "User"
 
 
 @router.get(
@@ -21,7 +21,7 @@ USER_TAG = "User"
     name="Get current user",
     description="Get details of the user currently authenticated",
     response_model=User,
-    tags=[USER_TAG],
+    tags=[USERS_TAG],
 )
 def get_user(
     token: str = Depends(oauth2_scheme),
@@ -39,7 +39,7 @@ def get_user(
     "/",
     name="Create a new user",
     description="Create a new user, if permitted to do so",
-    tags=[USER_TAG],
+    tags=[USERS_TAG],
 )
 def create_user(
     body: CreateUser,
@@ -57,6 +57,7 @@ def create_user(
 
     password_handler = PasswordHandler(settings)
     user = DbUser(
+        id=uuid4(),
         name=body.name,
         email=body.email,
         active=True,

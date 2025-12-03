@@ -1,22 +1,19 @@
 from datetime import datetime
 from uuid import UUID
-
 from pydantic import BaseModel
 
 
-class BaseUser(BaseModel):
+class BaseVault(BaseModel):
     name: str
-    email: str
+    description: str
 
 
-class User(BaseUser):
+class Vault(BaseVault):
     id: UUID
-    active: bool
+    owner: UUID
     creation_date: datetime
-    last_login: datetime | None
-
     model_config = {"from_attributes": True}
 
 
-class CreateUser(BaseUser):
-    password: str
+class CreateVault(BaseVault):
+    passphrase: str
