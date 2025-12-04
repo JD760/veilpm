@@ -1,20 +1,22 @@
 from typing import Optional
-
-from sqlalchemy import URL, Engine, create_engine
-from sqlalchemy.orm import sessionmaker
-
-from .settings import Settings
+from sqlalchemy import Engine, create_engine, URL
+from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from src.core.config import settings
 
 engine: Optional[Engine] = None
 sessionLocal: Optional[sessionmaker] = None
 
 
-def init_database(settings):
-    # This should be evil but is actually recommended
-    # for handling a session factory
+# Base class for database models
+class Base(DeclarativeBase):
+    pass
+
+
+def init_database():
     global engine, sessionLocal
-    engine = create_engine(get_connection_uri(settings))
+    engine = create_engine(get_connection_uri())
     sessionLocal = sessionmaker(bind=engine)
+    print("Database initialised!")
 
 
 def get_session():
@@ -25,7 +27,7 @@ def get_session():
         session.close()
 
 
-def get_connection_uri(settings: Settings):
+def get_connection_uri():
     return URL.create(
         drivername="postgresql+psycopg",
         username=settings.postgres_user,

@@ -15,3 +15,6 @@ class Settings(BaseSettings):
     jwt_session_timeout: int = 60 * 24
 
     debug: bool
+
+
+settings = Settings()

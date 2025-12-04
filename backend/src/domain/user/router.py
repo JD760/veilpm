@@ -1,16 +1,15 @@
-from datetime import datetime
 from http import HTTPStatus
-from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from src.dbutil import get_session
-from src.dependency_util import get_settings
-from src.database.user import DbUser, get_user_by_name, insert_user
-from src.models.user import CreateUser, User
-from src.security import PasswordHandler, TokenHandler
-from src.settings import Settings
+from src.core.security import TokenHandler, PasswordHandler, oauth2_scheme
+from uuid import uuid4
+from datetime import datetime
+from src.core.dependencies import get_settings
+from src.core.db import get_session
+from src.core.config import Settings
+from .schema import User, CreateUser
+from .models import DbUser
 
-from .auth import oauth2_scheme
+from .service import user_service
 
 router = APIRouter(prefix="/users")
 USERS_TAG = "User"
@@ -25,13 +24,12 @@ USERS_TAG = "User"
 )
 def get_user(
     token: str = Depends(oauth2_scheme),
-    session: Session = Depends(get_session),
+    session=Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> User:
-    token_handler = TokenHandler(settings)
-    token_payload = token_handler.decode_or_http_error(token)
+    token_payload = TokenHandler.decode_or_http_error(token)
     user_name = token_payload.get("sub", None)
-    user: DbUser = get_user_by_name(session, user_name)
+    user: DbUser = user_service.get_user_by_name(session, user_name)
     return User.model_validate(user)
 
 
@@ -44,7 +42,7 @@ def get_user(
 def create_user(
     body: CreateUser,
     token: str = Depends(oauth2_scheme),
-    session: Session = Depends(get_session),
+    session=Depends(get_session),
     settings: Settings = Depends(get_settings),
 ):
     token_handler = TokenHandler(settings)
@@ -64,5 +62,5 @@ def create_user(
         creation_date=datetime.now(),
         password_hash=password_handler.hash(body.password),
     )
-    insert_user(session, user)
+    user_service.insert_user(session, user)
     return HTTPStatus.OK
