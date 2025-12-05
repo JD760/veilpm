@@ -8,11 +8,12 @@ from src.core.db import get_session
 from src.core.config import Settings
 from .schema import User, CreateUser
 from .models import DbUser
-
+from src.core.config import logger
 from .service import user_service
+from src.interfaces.db_session import DBSession
 
 router = APIRouter(prefix="/users")
-USERS_TAG = "User"
+USERS_TAG = "Users"
 
 
 @router.get(
@@ -24,12 +25,13 @@ USERS_TAG = "User"
 )
 def get_user(
     token: str = Depends(oauth2_scheme),
-    session=Depends(get_session),
+    session: DBSession = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> User:
     token_payload = TokenHandler.decode_or_http_error(token)
     user_name = token_payload.get("sub", None)
-    user: DbUser = user_service.get_user_by_name(session, user_name)
+    logger.critical(f"User: {user_name}")
+    user: DbUser = user_service.get_user(session, user_name)
     return User.model_validate(user)
 
 
@@ -42,7 +44,7 @@ def get_user(
 def create_user(
     body: CreateUser,
     token: str = Depends(oauth2_scheme),
-    session=Depends(get_session),
+    session: DBSession = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ):
     token_handler = TokenHandler(settings)

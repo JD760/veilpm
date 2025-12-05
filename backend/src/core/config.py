@@ -1,5 +1,6 @@
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
+from logging import Logger
 
 
 class Settings(BaseSettings):
@@ -17,4 +18,5 @@ class Settings(BaseSettings):
     debug: bool
 
 
+logger = Logger("Logger")
 settings = Settings()

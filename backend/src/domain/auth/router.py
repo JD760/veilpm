@@ -31,7 +31,6 @@ def create_access_token(
     user: DbUser = user_service.get_user_by_name(session, form_data.username)
     if not PasswordHandler.verify(form_data.password, user.password_hash):
         raise HTTPException(HTTPStatus.UNAUTHORIZED, "Incorrect password")
-
     user_service.set_last_login(session, user.id)
     token: str = TokenHandler.encode(user.id)
     return Token(access_token=token, token_type="Bearer")

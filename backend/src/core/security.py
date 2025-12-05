@@ -50,27 +50,28 @@ class TokenHandler:
         )
         return token_payload
 
-    @http_error_translator
     @classmethod
+    @http_error_translator
     def decode_or_http_error(cls, token: str) -> str:
         return cls.decode(token)
 
+    @classmethod
     def verify(cls, token: str) -> bool:
         return cls.decode(token) is not None
 
-    @http_error_translator
     @classmethod
+    @http_error_translator
     def verify_or_http_error(cls, token: str) -> str:
         return cls.verify(token)
 
 
 class PasswordHandler:
-    password_hash: PasswordHash = PasswordHash.recommended()
+    algorithm: PasswordHash = PasswordHash.recommended()
 
     @classmethod
     def hash(cls, password: str):
-        return cls.password_hash.hash(password)
+        return cls.algorithm.hash(password)
 
     @classmethod
     def verify(cls, password: str, password_hash: str):
-        return cls.password_hash.verify(password, password_hash)
+        return cls.algorithm.verify(password, password_hash)

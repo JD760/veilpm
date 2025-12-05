@@ -38,7 +38,6 @@ class RequestRepository:
             vault = cls.get_vault_by_id(session, vault_id)
             session.delete(vault)
             session.commit()
-            session.refresh(vault)
 
         @classmethod
         def get_vaults_by_user(cls, session: Session, user_id: UUID):
