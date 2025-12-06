@@ -14,3 +14,11 @@ class DbVault(Base):
     description: Mapped[str] = mapped_column(Text)
     creation_date: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True))
     passphrase_hash: Mapped[str] = mapped_column(Text)
+
+
+class DbVaultUser(Base):
+    __tablename__ = "vault_user"
+    __table_args__ = {"schema": "veil"}
+    id: Mapped[UUID] = mapped_column(SQL_UUID, primary_key=True)
+    user_id: Mapped[UUID] = mapped_column(SQL_UUID)
+    vault_id: Mapped[UUID] = mapped_column(SQL_UUID)

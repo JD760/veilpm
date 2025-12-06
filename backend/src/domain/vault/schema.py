@@ -17,3 +17,9 @@ class Vault(BaseVault):
 
 class CreateVault(BaseVault):
     passphrase: str
+
+
+class VaultUser(BaseModel):
+    user_id: UUID
+    vault_id: UUID
+    model_config = {"from_attributes": True}
