@@ -40,6 +40,21 @@ class VaultService:
             self._repository.share_vault(session, vault.id, shared_user_id)
         )
 
+    def unshare_vault_with_user(
+        self,
+        session,
+        vault_id: UUID,
+        user: User,
+        shared_user_id: UUID,
+    ):
+        vault: Vault = self.get_vault_by_id(session, vault_id, user.id)
+        self._check_vault_ownership(vault, user.id)
+        self._repository.unshare_vault(
+            session,
+            vault_id,
+            shared_user_id,
+        )
+
     def get_vault_by_id(self, session, vault_id: UUID, user_id: UUID) -> Vault:
         db_vault: DbVault = self._repository.get_vault_by_id(
             session,

@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from uuid import UUID, uuid4
 from .models import DbVault, DbVaultUser
@@ -28,7 +29,12 @@ class RequestRepository:
         )
         associations = [VaultUser.model_validate(row) for row in rows]
         db_vaults = [
-            Queries.get_by_id(session, DbVault, a.vault_id) for a in associations
+            Queries.get_by_id(
+                session,
+                DbVault,
+                a.vault_id,
+            )
+            for a in associations
         ]
         vaults = [Vault.model_validate(db_vault) for db_vault in db_vaults]
         return vaults
@@ -39,9 +45,26 @@ class RequestRepository:
         vault_id: UUID,
         share_user_id: UUID,
     ) -> DbVaultUser:
-        association = DbVaultUser(id=uuid4(), vault_id=vault_id, user_id=share_user_id)
+        association = DbVaultUser(
+            id=uuid4(),
+            vault_id=vault_id,
+            user_id=share_user_id,
+        )
         Queries.insert(session, association)
         return association
+
+    def unshare_vault(self, session, vault_id: UUID, share_user_id: UUID):
+        association = (
+            session.execute(
+                select(DbVaultUser).where(
+                    DbVaultUser.vault_id == vault_id,
+                    DbVaultUser.user_id == share_user_id,
+                )
+            )
+            .scalars()
+            .one_or_none()
+        )
+        Queries.delete(session, association)
 
     def get_vault_by_id(self, session: Session, vault_id: UUID) -> DbVault:
         return Queries.get_by_id(session, DbVault, vault_id)

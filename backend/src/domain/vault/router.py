@@ -61,16 +61,43 @@ def create_new_user_vault_route(
 
 
 @router.post(
-    "/{vault_id}/shares/", name="Grant a user access to the vault", status_code=200
+    "/{vault_id}/shares/",
+    name="Grant a user access to the vault",
+    status_code=200,
 )
 def share_vault_with_user_route(
     body: UserID,
-    vault_id=Annotated[UUID, Path(title="ID of the current dataset")],
+    vault_id=Annotated[UUID, Path(title="ID of the current vault")],
     token: str = Depends(oauth2_scheme),
     session: DBSession = Depends(get_session),
 ) -> VaultUser:
     user: User = user_service.get_user_from_token(session, token)
-    return vault_service.share_vault_with_user(session, vault_id, user, body.user_id)
+    return vault_service.share_vault_with_user(
+        session,
+        vault_id,
+        user,
+        body.user_id,
+    )
+
+
+@router.delete(
+    "/{vault_id}/shares/{user_id}",
+    name="Remove a user from a vault share",
+    status_code=204,
+)
+def unshare_vault_with_user_route(
+    vault_id=Annotated[UUID, Path(title="ID of the vault")],
+    user_id=Annotated[UUID, Path(title="ID of the user")],
+    token: str = Depends(oauth2_scheme),
+    session: DBSession = Depends(get_session),
+):
+    auth_user: User = user_service.get_user_from_token(session, token)
+    return vault_service.unshare_vault_with_user(
+        session,
+        vault_id,
+        auth_user,
+        user_id,
+    )
 
 
 @router.get(
