@@ -22,3 +22,11 @@ class DbVaultUser(Base):
     id: Mapped[UUID] = mapped_column(SQL_UUID, primary_key=True)
     user_id: Mapped[UUID] = mapped_column(SQL_UUID)
     vault_id: Mapped[UUID] = mapped_column(SQL_UUID)
+
+
+class DbVaultFolder(Base):
+    __tablename__ = "vault_folder"
+    __table_args__ = {"schema": "veil"}
+    id: Mapped[UUID] = mapped_column(SQL_UUID, primary_key=True)
+    folder_id: Mapped[UUID] = mapped_column(SQL_UUID)
+    vault_id: Mapped[UUID] = mapped_column(SQL_UUID)

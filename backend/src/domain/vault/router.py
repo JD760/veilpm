@@ -45,6 +45,32 @@ def get_shared_user_vaults_route(
     return vault_service.get_shared_vaults(session, user.id)
 
 
+@router.get(
+    "/{vault_id}",
+    name="Get the provided vault",
+    description="Get the vault with provided ID if it exists\
+        and the user is authorised to view it",
+    response_model=Vault,
+)
+def get_vault_route(
+    vault_id: UUID,
+    token: str = Depends(oauth2_scheme),
+    session: DBSession = Depends(get_session),
+) -> Vault:
+    user: User = user_service.get_user_from_token(session, token)
+    return vault_service.get_vault_by_id(session, vault_id, user.id)
+
+
+@router.get("/{vault_id}/folders", name="Get all folders in a vault")
+def get_vault_folders_route(
+    vault_id: UUID,
+    token: str = Depends(oauth2_scheme),
+    session: DBSession = Depends(get_session),
+):
+    user: User = user_service.get_user_from_token(session, token)
+    return vault_service.get_vault_folders(session, vault_id, user.id)
+
+
 @router.post(
     "/",
     name="Create a new vault owned by user",
@@ -80,6 +106,11 @@ def share_vault_with_user_route(
     )
 
 
+@router.post("/{vault_id}/folders")
+def add_folder_to_vault():
+    pass
+
+
 @router.delete(
     "/{vault_id}/shares/{user_id}",
     name="Remove a user from a vault share",
@@ -100,22 +131,6 @@ def unshare_vault_with_user_route(
     )
 
 
-@router.get(
-    "/{vault_id}",
-    name="Get the provided vault",
-    description="Get the vault with provided ID if it exists\
-        and the user is authorised to view it",
-    response_model=Vault,
-)
-def get_vault_route(
-    vault_id: UUID,
-    token: str = Depends(oauth2_scheme),
-    session: DBSession = Depends(get_session),
-) -> Vault:
-    user: User = user_service.get_user_from_token(session, token)
-    return vault_service.get_vault_by_id(session, vault_id, user.id)
-
-
 @router.delete(
     "/{vault_id}",
     name="Delete the vault provided",
@@ -129,3 +144,8 @@ def delete_vault_route(
 ):
     user: User = user_service.get_user_from_token(session, token)
     return vault_service.delete_vault(session, vault_id, user.id)
+
+
+@router.delete("/{vault_id}/folders/{folder_id}")
+def delete_folder_from_vault():
+    pass

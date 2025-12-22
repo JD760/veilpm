@@ -7,6 +7,7 @@ from .schema import CreateVault, Vault, VaultUser
 from .repository import RequestRepository
 from uuid import UUID, uuid4
 from .models import DbVault
+from src.domain.folder.service import folder_service
 
 
 class VaultService:
@@ -18,6 +19,13 @@ class VaultService:
 
     def get_shared_vaults(self, session, user_id: UUID) -> list[Vault]:
         return self._repository.get_shared_vaults(session, user_id)
+
+    def get_vault_folders(self, session, vault_id, user_id: UUID):
+        vault: Vault = Vault.model_validate(
+            self._repository.get_vault_by_id(session, vault_id),
+        )
+        vault.check_ownership(user_id)
+        return folder_service.get_vault_folders(session, vault_id)
 
     def create_vault(self, session, vault_create: CreateVault, user_id: UUID):
         db_vault: DbVault = DbVault(
@@ -35,7 +43,7 @@ class VaultService:
         self, session, vault_id: UUID, user: User, shared_user_id: UUID
     ) -> VaultUser:
         vault: Vault = self.get_vault_by_id(session, vault_id, user.id)
-        self._check_vault_ownership(vault, user.id)
+        vault.check_ownership(user.id)
         return VaultUser.model_validate(
             self._repository.share_vault(session, vault.id, shared_user_id)
         )
@@ -48,7 +56,7 @@ class VaultService:
         shared_user_id: UUID,
     ):
         vault: Vault = self.get_vault_by_id(session, vault_id, user.id)
-        self._check_vault_ownership(vault, user.id)
+        vault.check_ownership(user.id)
         self._repository.unshare_vault(
             session,
             vault_id,
@@ -63,7 +71,7 @@ class VaultService:
         if not db_vault:
             raise HTTPException(HTTPStatus.NOT_FOUND, "Vault not found")
         vault: Vault = Vault.model_validate(db_vault)
-        self._check_vault_ownership(vault, user_id)
+        vault.check_ownership(user_id)
         return self._repository.get_vault_by_id(session, vault_id)
 
     def delete_vault(self, session, vault_id: UUID, user_id: UUID):
@@ -74,15 +82,8 @@ class VaultService:
                 f"Vault {vault_id} does not exist",
             )
         vault: Vault = Vault.model_validate(db_vault)
-        self._check_vault_ownership(vault, user_id)
+        vault.check_ownership(user_id)
         return self._repository.delete_vault(session, vault)
-
-    @staticmethod
-    def _check_vault_ownership(vault: Vault, user_id: UUID) -> None:
-        if vault.owner != user_id:
-            raise HTTPException(
-                HTTPStatus.UNAUTHORIZED, "Only the owner may modify a vault"
-            )
 
 
 vault_service = VaultService(RequestRepository())
