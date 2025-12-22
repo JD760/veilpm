@@ -6,7 +6,7 @@ from src.core.db import get_session
 from .schema import Vault, CreateVault, VaultUser
 from src.domain.user.schema import User, UserID
 from src.domain.user.service import user_service
-from .service import vault_service
+from .service import get_vault_service, VaultService
 from src.interfaces.db_session import DBSession
 
 VAULTS_TAG = "Vaults"
@@ -23,11 +23,12 @@ def get_all_user_vaults_route(
     shared: bool = True,
     token: str = Depends(oauth2_scheme),
     session: DBSession = Depends(get_session),
+    vault_service: VaultService = Depends(get_vault_service),
 ) -> list[Vault]:
     user: User = user_service.get_user_from_token(session, token)
-    vaults: list[Vault] = vault_service.get_vaults_by_user(session, user.id)
+    vaults: list[Vault] = vault_service.get_vaults_by_user(user.id)
     if shared:
-        vaults += vault_service.get_shared_vaults(session, user.id)
+        vaults += vault_service.get_shared_vaults(user.id)
     return vaults
 
 
@@ -40,9 +41,10 @@ def get_all_user_vaults_route(
 def get_shared_user_vaults_route(
     token: str = Depends(oauth2_scheme),
     session: DBSession = Depends(get_session),
+    vault_service: VaultService = Depends(get_vault_service),
 ) -> list[Vault]:
     user: User = user_service.get_user_from_token(session, token)
-    return vault_service.get_shared_vaults(session, user.id)
+    return vault_service.get_shared_vaults(user.id)
 
 
 @router.get(
@@ -56,9 +58,10 @@ def get_vault_route(
     vault_id: UUID,
     token: str = Depends(oauth2_scheme),
     session: DBSession = Depends(get_session),
+    vault_service: VaultService = Depends(get_vault_service),
 ) -> Vault:
     user: User = user_service.get_user_from_token(session, token)
-    return vault_service.get_vault_by_id(session, vault_id, user.id)
+    return vault_service.get_vault_by_id(vault_id, user.id)
 
 
 @router.get("/{vault_id}/folders", name="Get all folders in a vault")
@@ -66,9 +69,10 @@ def get_vault_folders_route(
     vault_id: UUID,
     token: str = Depends(oauth2_scheme),
     session: DBSession = Depends(get_session),
+    vault_service: VaultService = Depends(get_vault_service),
 ):
     user: User = user_service.get_user_from_token(session, token)
-    return vault_service.get_vault_folders(session, vault_id, user.id)
+    return vault_service.get_vault_folders(vault_id, user.id)
 
 
 @router.post(
@@ -81,9 +85,10 @@ def create_new_user_vault_route(
     body: CreateVault,
     token: str = Depends(oauth2_scheme),
     session: DBSession = Depends(get_session),
+    vault_service: VaultService = Depends(get_vault_service),
 ) -> Vault:
     user: User = user_service.get_user_from_token(session, token)
-    return vault_service.create_vault(session, body, user.id)
+    return vault_service.create_vault(body, user.id)
 
 
 @router.post(
@@ -96,10 +101,10 @@ def share_vault_with_user_route(
     vault_id=Annotated[UUID, Path(title="ID of the current vault")],
     token: str = Depends(oauth2_scheme),
     session: DBSession = Depends(get_session),
+    vault_service: VaultService = Depends(get_vault_service),
 ) -> VaultUser:
     user: User = user_service.get_user_from_token(session, token)
     return vault_service.share_vault_with_user(
-        session,
         vault_id,
         user,
         body.user_id,
@@ -121,10 +126,10 @@ def unshare_vault_with_user_route(
     user_id=Annotated[UUID, Path(title="ID of the user")],
     token: str = Depends(oauth2_scheme),
     session: DBSession = Depends(get_session),
+    vault_service: VaultService = Depends(get_vault_service),
 ):
     auth_user: User = user_service.get_user_from_token(session, token)
     return vault_service.unshare_vault_with_user(
-        session,
         vault_id,
         auth_user,
         user_id,
@@ -141,9 +146,10 @@ def delete_vault_route(
     vault_id: UUID,
     token: str = Depends(oauth2_scheme),
     session: DBSession = Depends(get_session),
+    vault_service: VaultService = Depends(get_vault_service),
 ):
     user: User = user_service.get_user_from_token(session, token)
-    return vault_service.delete_vault(session, vault_id, user.id)
+    return vault_service.delete_vault(vault_id, user.id)
 
 
 @router.delete("/{vault_id}/folders/{folder_id}")
