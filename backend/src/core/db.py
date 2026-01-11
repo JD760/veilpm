@@ -2,6 +2,7 @@ from typing import Optional, Type, TypeVar
 from uuid import UUID
 from sqlalchemy import Engine, create_engine, URL, select
 from sqlalchemy.orm import sessionmaker, DeclarativeBase, Session
+from sqlalchemy_memory import MemorySession
 from src.core.config import settings
 
 engine: Optional[Engine] = None
@@ -18,6 +19,16 @@ def init_database():
     engine = create_engine(get_connection_uri())
     sessionLocal = sessionmaker(bind=engine)
     print("Database initialised!")
+
+
+def init_in_memory_database():
+    global engine, sessionLocal
+    engine = create_engine("memory://")
+    sessionLocal = sessionmaker(
+        bind=engine,
+        class_=MemorySession,
+        expire_on_commit=False,
+    )
 
 
 def get_session():

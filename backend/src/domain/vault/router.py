@@ -2,12 +2,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Path
 from uuid import UUID
 from src.core.security import oauth2_scheme
-from src.core.db import get_session
+from src.domain.user.service import get_user_service, UserService
 from .schema import Vault, CreateVault, VaultUser
 from src.domain.user.schema import User, UserID
-from src.domain.user.service import user_service
 from .service import get_vault_service, VaultService
-from src.interfaces.db_session import DBSession
 
 VAULTS_TAG = "Vaults"
 router = APIRouter(prefix="/vaults", tags=[VAULTS_TAG])
@@ -22,10 +20,10 @@ router = APIRouter(prefix="/vaults", tags=[VAULTS_TAG])
 def get_all_user_vaults_route(
     shared: bool = True,
     token: str = Depends(oauth2_scheme),
-    session: DBSession = Depends(get_session),
     vault_service: VaultService = Depends(get_vault_service),
+    user_service: UserService = Depends(get_user_service),
 ) -> list[Vault]:
-    user: User = user_service.get_user_from_token(session, token)
+    user: User = user_service.get_user_from_token(token)
     vaults: list[Vault] = vault_service.get_vaults_by_user(user.id)
     if shared:
         vaults += vault_service.get_shared_vaults(user.id)
@@ -40,10 +38,10 @@ def get_all_user_vaults_route(
 )
 def get_shared_user_vaults_route(
     token: str = Depends(oauth2_scheme),
-    session: DBSession = Depends(get_session),
     vault_service: VaultService = Depends(get_vault_service),
+    user_service: UserService = Depends(get_user_service),
 ) -> list[Vault]:
-    user: User = user_service.get_user_from_token(session, token)
+    user: User = user_service.get_user_from_token(token)
     return vault_service.get_shared_vaults(user.id)
 
 
@@ -57,10 +55,10 @@ def get_shared_user_vaults_route(
 def get_vault_route(
     vault_id: UUID,
     token: str = Depends(oauth2_scheme),
-    session: DBSession = Depends(get_session),
     vault_service: VaultService = Depends(get_vault_service),
+    user_service: UserService = Depends(get_user_service),
 ) -> Vault:
-    user: User = user_service.get_user_from_token(session, token)
+    user: User = user_service.get_user_from_token(token)
     return vault_service.get_vault_by_id(vault_id, user.id)
 
 
@@ -68,10 +66,10 @@ def get_vault_route(
 def get_vault_folders_route(
     vault_id: UUID,
     token: str = Depends(oauth2_scheme),
-    session: DBSession = Depends(get_session),
     vault_service: VaultService = Depends(get_vault_service),
+    user_service: UserService = Depends(get_user_service),
 ):
-    user: User = user_service.get_user_from_token(session, token)
+    user: User = user_service.get_user_from_token(token)
     return vault_service.get_vault_folders(vault_id, user.id)
 
 
@@ -84,10 +82,10 @@ def get_vault_folders_route(
 def create_new_user_vault_route(
     body: CreateVault,
     token: str = Depends(oauth2_scheme),
-    session: DBSession = Depends(get_session),
     vault_service: VaultService = Depends(get_vault_service),
+    user_service: UserService = Depends(get_user_service),
 ) -> Vault:
-    user: User = user_service.get_user_from_token(session, token)
+    user: User = user_service.get_user_from_token(token)
     return vault_service.create_vault(body, user.id)
 
 
@@ -100,10 +98,10 @@ def share_vault_with_user_route(
     body: UserID,
     vault_id=Annotated[UUID, Path(title="ID of the current vault")],
     token: str = Depends(oauth2_scheme),
-    session: DBSession = Depends(get_session),
     vault_service: VaultService = Depends(get_vault_service),
+    user_service: UserService = Depends(get_user_service),
 ) -> VaultUser:
-    user: User = user_service.get_user_from_token(session, token)
+    user: User = user_service.get_user_from_token(token)
     return vault_service.share_vault_with_user(
         vault_id,
         user,
@@ -125,10 +123,10 @@ def unshare_vault_with_user_route(
     vault_id=Annotated[UUID, Path(title="ID of the vault")],
     user_id=Annotated[UUID, Path(title="ID of the user")],
     token: str = Depends(oauth2_scheme),
-    session: DBSession = Depends(get_session),
     vault_service: VaultService = Depends(get_vault_service),
+    user_service: UserService = Depends(get_user_service),
 ):
-    auth_user: User = user_service.get_user_from_token(session, token)
+    auth_user: User = user_service.get_user_from_token(token)
     return vault_service.unshare_vault_with_user(
         vault_id,
         auth_user,
@@ -145,10 +143,10 @@ def unshare_vault_with_user_route(
 def delete_vault_route(
     vault_id: UUID,
     token: str = Depends(oauth2_scheme),
-    session: DBSession = Depends(get_session),
     vault_service: VaultService = Depends(get_vault_service),
+    user_service: UserService = Depends(get_user_service),
 ):
-    user: User = user_service.get_user_from_token(session, token)
+    user: User = user_service.get_user_from_token(token)
     return vault_service.delete_vault(vault_id, user.id)
 
 

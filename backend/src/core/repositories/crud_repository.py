@@ -14,6 +14,14 @@ class CrudRepository(Generic[T]):
     def get_by_id(self, id: UUID) -> T:
         return Queries.get_by_id(self.session, self.model, id)
 
+    def get_by_field(self, field_name: str, field_value) -> list[T]:
+        return Queries.get_by_field(
+            self.session,
+            self.model,
+            field_name,
+            field_value,
+        )
+
     def create(self, entity: T):
         Queries.insert(self.session, entity)
 

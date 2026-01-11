@@ -3,13 +3,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from src.core.security import TokenHandler, PasswordHandler, oauth2_scheme
 from uuid import uuid4
 from datetime import datetime
-from src.core.dependencies import get_settings
 from src.core.db import get_session
-from src.core.config import Settings
+from src.core.config import settings
 from .schema import User, CreateUser
 from .models import DbUser
 from src.core.config import logger
-from .service import user_service
+from .service import get_user_service
 from src.interfaces.db_session import DBSession
 
 router = APIRouter(prefix="/users")
@@ -26,7 +25,7 @@ USERS_TAG = "Users"
 def get_user(
     token: str = Depends(oauth2_scheme),
     session: DBSession = Depends(get_session),
-    settings: Settings = Depends(get_settings),
+    user_service=Depends(get_user_service),
 ) -> User:
     token_payload = TokenHandler.decode_or_http_error(token)
     user_name = token_payload.get("sub", None)
@@ -44,8 +43,7 @@ def get_user(
 def create_user(
     body: CreateUser,
     token: str = Depends(oauth2_scheme),
-    session: DBSession = Depends(get_session),
-    settings: Settings = Depends(get_settings),
+    user_service=Depends(get_user_service),
 ):
     token_handler = TokenHandler(settings)
     token_payload = token_handler.decode_or_http_error(token)
@@ -64,5 +62,5 @@ def create_user(
         creation_date=datetime.now(),
         password_hash=password_handler.hash(body.password),
     )
-    user_service.insert_user(session, user)
+    user_service.insert_user(user)
     return HTTPStatus.OK

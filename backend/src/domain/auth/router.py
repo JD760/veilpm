@@ -4,9 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from src.core.config import Settings
 from src.core.dependencies import get_settings
-from src.core.db import get_session
 from src.core.security import oauth2_scheme, TokenHandler, PasswordHandler
-from src.domain.user.service import user_service
+from src.domain.user.service import UserService, get_user_service
 from src.domain.user.models import DbUser
 from .schema import Token
 
@@ -25,12 +24,11 @@ def auth_check(
 @router.post("/token", response_model=Token, tags=[AUTH_TAG])
 def create_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    settings: Settings = Depends(get_settings),
-    session=Depends(get_session),
+    user_service: UserService = Depends(get_user_service),
 ) -> Token:
-    user: DbUser = user_service.get_user_by_name(session, form_data.username)
+    user: DbUser = user_service.get_user_by_name(form_data.username)
     if not PasswordHandler.verify(form_data.password, user.password_hash):
         raise HTTPException(HTTPStatus.UNAUTHORIZED, "Incorrect password")
-    user_service.set_last_login(session, user.id)
+    user_service.set_last_login(user.id)
     token: str = TokenHandler.encode(user.id)
     return Token(access_token=token, token_type="Bearer")

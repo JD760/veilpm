@@ -15,7 +15,6 @@ class VaultRepository(CrudRepository):
         self,
         user_id: UUID,
     ) -> list[Vault]:
-        # return [Vault.model_validate(row) for row in rows]
         rows = Queries.get_by_field(self.session, DbVault, "owner", user_id)
         return [Vault.model_validate(row) for row in rows]
 
@@ -70,12 +69,3 @@ class VaultRepository(CrudRepository):
             .one_or_none()
         )
         Queries.delete(self.session, association)
-
-    def get_vault_by_id(self, vault_id: UUID) -> DbVault:
-        return Queries.get_by_id(self.session, DbVault, vault_id)
-
-    def create_vault(self, vault: DbVault):
-        Queries.insert(self.session, vault)
-
-    def delete_vault(self, vault_id: UUID):
-        Queries.delete_by_id(self.session, DbVault, vault_id)
